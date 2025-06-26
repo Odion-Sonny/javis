@@ -1,12 +1,32 @@
 {
   "ai": {
-    "provider": "mock",
-    "model": "gpt-3.5-turbo",
-    "api_key": null,
-    "base_url": null,
-    "max_tokens": 1000,
-    "temperature": 0.7,
-    "system_prompt": "You are Jarvis, an intelligent AI assistant. You are helpful, harmless, and honest. You can help with various tasks including answering questions, providing information, and assisting with system operations when appropriate."
+    "primary_provider": "ollama",
+    "fallback_providers": ["openai", "mock"],
+    "context_window": 10,
+    "system_prompt": "You are Jarvis, an intelligent AI assistant. You are helpful, harmless, and honest. You can help with various tasks including answering questions, providing information, and assisting with system operations when appropriate.",
+    "ollama": {
+      "model": "llama2",
+      "base_url": "http://localhost:11434",
+      "temperature": 0.7,
+      "max_tokens": 1000
+    },
+    "openai": {
+      "api_key": null,
+      "model": "gpt-3.5-turbo",
+      "base_url": "https://api.openai.com/v1",
+      "temperature": 0.7,
+      "max_tokens": 1000
+    },
+    "anthropic": {
+      "api_key": null,
+      "model": "claude-3-sonnet-20240229",
+      "base_url": "https://api.anthropic.com/v1",
+      "temperature": 0.7,
+      "max_tokens": 1000
+    },
+    "mock": {
+      "mock_responses": {}
+    }
   },
   "voice": {
     "wake_word": "jarvis",

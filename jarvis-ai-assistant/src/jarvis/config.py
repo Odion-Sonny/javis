@@ -36,18 +36,38 @@ class Config:
         """Get default configuration values."""
         return {
             "ai": {
-                "provider": "mock",  # mock, openai, anthropic
-                "model": "gpt-3.5-turbo",
-                "api_key": None,
-                "base_url": None,
-                "max_tokens": 1000,
-                "temperature": 0.7,
+                "primary_provider": "ollama",  # ollama, openai, anthropic, mock
+                "fallback_providers": ["openai", "mock"],
+                "context_window": 10,
                 "system_prompt": (
                     "You are Jarvis, an intelligent AI assistant. "
                     "You are helpful, harmless, and honest. "
                     "You can help with various tasks including answering questions, "
                     "providing information, and assisting with system operations when appropriate."
-                )
+                ),
+                "ollama": {
+                    "model": "llama2",
+                    "base_url": "http://localhost:11434",
+                    "temperature": 0.7,
+                    "max_tokens": 1000
+                },
+                "openai": {
+                    "api_key": None,
+                    "model": "gpt-3.5-turbo",
+                    "base_url": "https://api.openai.com/v1",
+                    "temperature": 0.7,
+                    "max_tokens": 1000
+                },
+                "anthropic": {
+                    "api_key": None,
+                    "model": "claude-3-sonnet-20240229",
+                    "base_url": "https://api.anthropic.com/v1",
+                    "temperature": 0.7,
+                    "max_tokens": 1000
+                },
+                "mock": {
+                    "mock_responses": {}
+                }
             },
             "voice": {
                 "wake_word": "jarvis",
@@ -116,10 +136,13 @@ class Config:
     def _load_from_environment(self):
         """Load configuration from environment variables."""
         env_mappings = {
-            "JARVIS_AI_PROVIDER": ["ai", "provider"],
-            "JARVIS_AI_MODEL": ["ai", "model"],
-            "JARVIS_AI_API_KEY": ["ai", "api_key"],
-            "JARVIS_AI_BASE_URL": ["ai", "base_url"],
+            "JARVIS_AI_PRIMARY_PROVIDER": ["ai", "primary_provider"],
+            "JARVIS_AI_OLLAMA_MODEL": ["ai", "ollama", "model"],
+            "JARVIS_AI_OLLAMA_BASE_URL": ["ai", "ollama", "base_url"],
+            "JARVIS_AI_OPENAI_API_KEY": ["ai", "openai", "api_key"],
+            "JARVIS_AI_OPENAI_MODEL": ["ai", "openai", "model"],
+            "JARVIS_AI_ANTHROPIC_API_KEY": ["ai", "anthropic", "api_key"],
+            "JARVIS_AI_ANTHROPIC_MODEL": ["ai", "anthropic", "model"],
             "JARVIS_VOICE_WAKE_WORD": ["voice", "wake_word"],
             "JARVIS_VOICE_LANGUAGE": ["voice", "language"],
             "JARVIS_MEMORY_DB_PATH": ["memory", "db_path"],

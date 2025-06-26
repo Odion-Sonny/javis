@@ -108,13 +108,23 @@ Examples:
         try:
             print("🔍 System Status:")
             print(f"  • Jarvis is running: {self.jarvis.is_running}")
-            print(f"  • AI Provider: {self.jarvis.config.ai['provider']}")
+            print(f"  • Primary AI Provider: {self.jarvis.config.ai['primary_provider']}")
             print(f"  • Voice enabled: {self.jarvis.config.voice.get('enabled', True)}")
             print(f"  • System tools enabled: {self.jarvis.config.system_tools['enabled']}")
+            
+            # Get AI Brain status
+            ai_status = self.jarvis.ai_brain.get_provider_status()
+            print("\n🧠 AI Providers:")
+            for provider, status in ai_status.items():
+                available = "✅" if status['available'] else "❌"
+                model_info = status.get('model_info', {})
+                model_name = model_info.get('name', 'unknown')
+                print(f"  {available} {provider}: {model_name}")
             
             # Get system info
             system_info = self.jarvis.system_tools.get_system_info()
             if "error" not in system_info:
+                print(f"\n💻 System Info:")
                 print(f"  • CPU cores: {system_info.get('cpu_count', 'unknown')}")
                 print(f"  • Memory available: {system_info.get('memory_available', 0) // (1024**3)} GB")
                 print(f"  • Current user: {system_info.get('user', 'unknown')}")

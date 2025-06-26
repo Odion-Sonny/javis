@@ -8,7 +8,7 @@ import asyncio
 from typing import Dict, Any, Optional
 
 from .voice.processor import VoiceProcessor
-from .ai_integration.client import AIClient
+from .ai_integration import AIBrain, IntentType
 from .memory.manager import MemoryManager
 from .system_tools.manager import SystemToolsManager
 from .config import Config
@@ -24,7 +24,7 @@ class JarvisAssistant:
         
         # Initialize components
         self.voice_processor = VoiceProcessor(config.voice)
-        self.ai_client = AIClient(config.ai)
+        self.ai_brain = AIBrain(config.ai)
         self.memory_manager = MemoryManager(config.memory)
         self.system_tools = SystemToolsManager(config.system_tools)
         
@@ -34,26 +34,38 @@ class JarvisAssistant:
     async def process_command(self, command: str, context: Optional[Dict[str, Any]] = None) -> str:
         """Process a command and return response."""
         try:
-            # Store command in memory
+            # Store command in memory (AI Brain manages its own context)
             await self.memory_manager.add_interaction(command, "user")
             
-            # Get AI response
-            response = await self.ai_client.get_response(
-                command, 
-                context=context,
-                memory_context=await self.memory_manager.get_context()
-            )
+            # Get AI response using the brain
+            ai_response = await self.ai_brain.process_message(command, context_override=context)
             
             # Store response in memory
-            await self.memory_manager.add_interaction(response, "assistant")
+            await self.memory_manager.add_interaction(ai_response.content, "assistant", {
+                'intent': ai_response.intent.value,
+                'confidence': ai_response.confidence,
+                'provider': ai_response.provider.value,
+                'model': ai_response.model
+            })
             
-            # Check if system tools need to be executed
-            if self.system_tools.should_execute(response):
-                tool_result = await self.system_tools.execute(response)
+            response_content = ai_response.content
+            
+            # Check if system tools need to be executed based on intent or content
+            should_execute_tools = (
+                ai_response.intent in [IntentType.SYSTEM_CONTROL, IntentType.COMMAND, IntentType.FILE_OPERATION] or
+                self.system_tools.should_execute(response_content)
+            )
+            
+            if should_execute_tools:
+                tool_result = await self.system_tools.execute(response_content)
                 if tool_result:
-                    response += f"\n\nSystem Tool Result: {tool_result}"
+                    response_content += f"\n\nSystem Tool Result: {tool_result}"
             
-            return response
+            self.logger.info(f"Processed command with intent: {ai_response.intent.value}, "
+                           f"confidence: {ai_response.confidence:.2f}, "
+                           f"provider: {ai_response.provider.value}")
+            
+            return response_content
             
         except Exception as e:
             self.logger.error(f"Error processing command: {e}")

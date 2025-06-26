@@ -7,10 +7,16 @@ import logging
 import subprocess
 import os
 import shutil
-import psutil
 from typing import Dict, Any, Optional, List
 import json
 import re
+
+# Import optional dependencies
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 
 class SystemToolsManager:
@@ -161,13 +167,25 @@ class SystemToolsManager:
         try:
             info = {
                 "platform": os.name,
-                "cpu_count": psutil.cpu_count(),
-                "memory_total": psutil.virtual_memory().total,
-                "memory_available": psutil.virtual_memory().available,
-                "disk_usage": {},
                 "current_directory": os.getcwd(),
                 "user": os.getlogin() if hasattr(os, 'getlogin') else "unknown"
             }
+            
+            # Add psutil-based info if available
+            if PSUTIL_AVAILABLE:
+                info.update({
+                    "cpu_count": psutil.cpu_count(),
+                    "memory_total": psutil.virtual_memory().total,
+                    "memory_available": psutil.virtual_memory().available,
+                })
+            else:
+                info.update({
+                    "cpu_count": "unknown (psutil not available)",
+                    "memory_total": "unknown (psutil not available)",
+                    "memory_available": "unknown (psutil not available)",
+                })
+            
+            info["disk_usage"] = {}
             
             # Get disk usage for common mount points
             common_paths = ["/", "/home", "C:\\", "D:\\"]
@@ -188,6 +206,10 @@ class SystemToolsManager:
     
     def list_running_processes(self) -> List[Dict[str, Any]]:
         """Get list of running processes."""
+        if not PSUTIL_AVAILABLE:
+            self.logger.warning("psutil not available for process listing")
+            return [{"error": "psutil package required for process listing"}]
+        
         try:
             processes = []
             for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):

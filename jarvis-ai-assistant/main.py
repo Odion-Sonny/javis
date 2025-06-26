@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from jarvis.core import JarvisAssistant
-from jarvis.cli import CLIInterface
+from jarvis.interfaces import CLIInterface
 from jarvis.config import Config
 from jarvis.utils.logger import setup_logger
 

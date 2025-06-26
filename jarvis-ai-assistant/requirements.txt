@@ -4,13 +4,23 @@
 aiohttp>=3.8.0
 openai>=1.0.0
 anthropic>=0.25.0
+ollama>=0.1.7
 
-# Voice Processing (optional - install based on needs)
-# Uncomment these if you want to implement real voice functionality
-# pyaudio>=0.2.11
-# speech-recognition>=3.10.0
-# pyttsx3>=2.90
-# whisper>=1.0.0
+# System automation and tools
+pyautogui>=0.9.54
+keyboard>=0.13.5
+mouse>=0.7.1
+pygetwindow>=0.0.9
+pyperclip>=1.8.2
+send2trash>=1.8.2
+
+# Voice Processing
+pyaudio>=0.2.11
+speech-recognition>=3.10.0
+pyttsx3>=2.90
+openai-whisper>=20231117
+pvporcupine>=3.0.0
+numpy>=1.24.0
 
 # System Integration
 psutil>=5.9.0
