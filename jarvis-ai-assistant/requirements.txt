@@ -1,0 +1,39 @@
+# Jarvis AI Assistant - Python Dependencies
+
+# Core AI and HTTP
+aiohttp>=3.8.0
+openai>=1.0.0
+anthropic>=0.25.0
+
+# Voice Processing (optional - install based on needs)
+# Uncomment these if you want to implement real voice functionality
+# pyaudio>=0.2.11
+# speech-recognition>=3.10.0
+# pyttsx3>=2.90
+# whisper>=1.0.0
+
+# System Integration
+psutil>=5.9.0
+click>=8.1.0
+
+# Development and Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Optional: For better TTS (Text-to-Speech)
+# gTTS>=2.3.0
+
+# Optional: For advanced audio processing
+# librosa>=0.10.0
+# soundfile>=0.12.0
+
+# Optional: For better CLI experience
+# rich>=13.0.0
+# prompt-toolkit>=3.0.0
+
+# Optional: For configuration file validation
+# pydantic>=2.0.0
+# jsonschema>=4.0.0

@@ -1,0 +1,47 @@
+{
+  "ai": {
+    "provider": "mock",
+    "model": "gpt-3.5-turbo",
+    "api_key": null,
+    "base_url": null,
+    "max_tokens": 1000,
+    "temperature": 0.7,
+    "system_prompt": "You are Jarvis, an intelligent AI assistant. You are helpful, harmless, and honest. You can help with various tasks including answering questions, providing information, and assisting with system operations when appropriate."
+  },
+  "voice": {
+    "wake_word": "jarvis",
+    "language": "en-US",
+    "engine": "default",
+    "input_device": null,
+    "output_device": null,
+    "noise_threshold": 0.5,
+    "pause_threshold": 0.8
+  },
+  "memory": {
+    "max_context_length": 4000,
+    "context_window_hours": 24,
+    "db_path": "jarvis_memory.db"
+  },
+  "system_tools": {
+    "enabled": true,
+    "allowed_commands": [
+      "ls", "pwd", "date", "whoami", "uname", "df", "free", "ps", "top"
+    ],
+    "blocked_commands": [
+      "rm", "sudo", "su", "chmod", "chown", "passwd", "dd", "mkfs", "fdisk"
+    ],
+    "max_execution_time": 30
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/jarvis.log",
+    "max_size": "10MB",
+    "backup_count": 5
+  },
+  "security": {
+    "require_confirmation": true,
+    "safe_mode": true,
+    "allowed_file_extensions": [".txt", ".json", ".csv", ".log"],
+    "blocked_directories": ["/etc", "/usr", "/bin", "/sbin"]
+  }
+}
