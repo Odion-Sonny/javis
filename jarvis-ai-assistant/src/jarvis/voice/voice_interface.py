@@ -17,7 +17,12 @@ import queue
 import time
 import io
 import wave
-import audioop
+# Optional dependencies with fallbacks
+try:
+    import audioop
+    AUDIOOP_AVAILABLE = True
+except ImportError:
+    AUDIOOP_AVAILABLE = False
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Callable, Union, Tuple
 from dataclasses import dataclass, field

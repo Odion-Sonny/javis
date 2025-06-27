@@ -1,323 +1,366 @@
 # Jarvis AI Assistant
 
-A sophisticated, voice-controlled AI assistant with system integration capabilities, built with Python. Jarvis combines natural language processing, voice interaction, memory management, and secure system tool execution to provide a comprehensive AI assistant experience.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security](https://img.shields.io/badge/security-enhanced-green.svg)](docs/SECURITY.md)
 
-## Features
+Jarvis is an intelligent AI assistant with comprehensive system integration capabilities, featuring voice interaction, command execution, learning capabilities, and enterprise-grade security controls.
 
-- 🤖 **AI Integration**: Support for multiple AI providers (OpenAI, Anthropic, or mock for development)
-- 🎤 **Voice Processing**: Speech-to-text and text-to-speech capabilities with wake word detection
-- 🧠 **Memory Management**: Persistent conversation history with intelligent context management
-- 🛠️ **System Tools**: Safe execution of system commands with security controls
-- 💬 **CLI Interface**: Interactive command-line interface for easy interaction
-- ⚙️ **Flexible Configuration**: JSON-based configuration with environment variable overrides
-- 🔒 **Security First**: Built-in security controls and command filtering
+## 🌟 Features
 
-## Quick Start
+- **🤖 Multi-Provider AI Integration**: Support for OpenAI, Anthropic, Ollama, and more
+- **🎙️ Voice Interaction**: Speech-to-text and text-to-speech with wake word detection
+- **🛡️ Enterprise Security**: Comprehensive command validation and audit logging
+- **🧠 Learning System**: Adaptive behavior based on user interactions and preferences
+- **💾 Advanced Memory**: Contextual conversation memory and task tracking
+- **⚙️ System Integration**: Safe system command execution with security controls
+- **📱 Multiple Interfaces**: CLI, voice, daemon, and interactive modes
+- **🔧 Professional CLI**: Command-line management interface with subcommands
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.8 or higher
+- pip package manager
+- Optional: Virtual environment (recommended)
 
 ### Installation
 
-1. Clone or download the project:
-```bash
-cd jarvis-ai-assistant
-```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-org/jarvis-ai-assistant.git
+   cd jarvis-ai-assistant
+   ```
 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\\Scripts\\activate
-```
+2. **Create virtual environment** (recommended):
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure API keys** (optional but recommended):
+   ```bash
+   # Copy example configuration
+   cp config/jarvis.json.example config/jarvis.json
+   
+   # Edit configuration with your API keys
+   nano config/jarvis.json
+   ```
 
 ### Basic Usage
 
-1. **CLI Mode** (Recommended for getting started):
+#### Interactive CLI Mode
 ```bash
-python main.py --mode cli
+python3 jarvis.py --mode cli
 ```
 
-2. **Voice Mode** (requires additional setup):
+#### Single Command Execution
 ```bash
-python main.py --mode voice
+python3 jarvis_cli.py exec "What's the weather like today?"
 ```
 
-3. **Daemon Mode** (background service):
+#### Voice Mode
 ```bash
-python main.py --mode daemon
+python3 jarvis.py --mode voice
 ```
 
-### Configuration
-
-1. Copy the template environment file:
+#### System Status
 ```bash
-cp .env.template .env
+python3 jarvis_cli.py status --health --metrics
 ```
 
-2. Edit `.env` with your API keys and preferences:
-```bash
-# AI Configuration
-JARVIS_AI_PROVIDER=openai  # or 'anthropic' or 'mock'
-JARVIS_AI_API_KEY=your_api_key_here
-JARVIS_AI_MODEL=gpt-3.5-turbo
+## 📋 Operation Modes
 
-# Voice Configuration
-JARVIS_VOICE_WAKE_WORD=jarvis
-JARVIS_VOICE_LANGUAGE=en-US
+### 1. CLI Mode (Default)
+Interactive command-line interface for ongoing conversations:
+```bash
+python3 jarvis.py --mode cli
+# or simply
+python3 jarvis.py
 ```
 
-3. Optionally, customize `config/jarvis.json` for advanced settings.
+### 2. Voice Mode
+Voice-controlled interaction with wake word detection:
+```bash
+python3 jarvis.py --mode voice
+# or
+python3 jarvis_cli.py voice --continuous
+```
 
-## Project Structure
+### 3. Interactive Mode
+Enhanced CLI with optional voice integration:
+```bash
+python3 jarvis.py --mode interactive
+# or
+python3 jarvis_cli.py shell --voice
+```
+
+### 4. Daemon Mode
+Background service for scheduled tasks and system monitoring:
+```bash
+python3 jarvis.py --mode daemon
+# or
+python3 jarvis_cli.py run --mode daemon --background
+```
+
+## 🛠️ Management Interface
+
+The `jarvis_cli.py` provides professional command-line management:
+
+### Configuration Management
+```bash
+# View configuration
+python3 jarvis_cli.py config show --section ai
+
+# Set configuration values
+python3 jarvis_cli.py config set ai.primary_provider openai
+python3 jarvis_cli.py config set ai.openai.api_key "your-key-here"
+
+# Validate configuration
+python3 jarvis_cli.py config validate
+```
+
+### System Monitoring
+```bash
+# System status
+python3 jarvis_cli.py status --health --metrics
+
+# Continuous monitoring
+python3 jarvis_cli.py status --watch 5
+
+# JSON output for scripting
+python3 jarvis_cli.py status --json
+```
+
+### System Management
+```bash
+# Install dependencies
+python3 jarvis_cli.py system install
+
+# Clean logs and data
+python3 jarvis_cli.py system clean --logs
+
+# Backup system data
+python3 jarvis_cli.py system backup backup.tar.gz
+```
+
+## 🔧 Configuration
+
+### Main Configuration (`config/jarvis.json`)
+
+```json
+{
+  "ai": {
+    "primary_provider": "ollama",
+    "fallback_providers": ["openai", "mock"],
+    "openai": {
+      "api_key": "your-openai-key",
+      "model": "gpt-3.5-turbo"
+    },
+    "anthropic": {
+      "api_key": "your-anthropic-key", 
+      "model": "claude-3-sonnet-20240229"
+    },
+    "ollama": {
+      "model": "llama2",
+      "base_url": "http://localhost:11434"
+    }
+  },
+  "voice": {
+    "wake_word": "jarvis",
+    "language": "en-US",
+    "engine": "default"
+  },
+  "security": {
+    "enabled": true,
+    "safe_mode": true,
+    "require_confirmation": true
+  },
+  "learning": {
+    "enabled": true,
+    "learning_interval_hours": 6
+  }
+}
+```
+
+### Security Configuration (`config/security.json`)
+
+Automatically created with secure defaults. See [Security Documentation](docs/SECURITY.md) for details.
+
+## 🛡️ Security Features
+
+Jarvis includes enterprise-grade security controls:
+
+- **Command Validation**: All system commands are validated before execution
+- **Threat Detection**: Pattern-based detection of dangerous operations
+- **Audit Logging**: Comprehensive logging of all security events
+- **Path Protection**: Prevents unauthorized file system access
+- **Rate Limiting**: Prevents command flooding attacks
+- **User Confirmation**: Required for potentially dangerous operations
+
+```bash
+# Security status
+python3 jarvis_cli.py status --health
+
+# Validate a command
+python3 security.py "rm important_file"  # Will be blocked
+
+# Safe execution
+python3 security.py --execute "ls -la"  # Will execute safely
+```
+
+## 🧠 Learning System
+
+Jarvis learns from your interactions to provide better assistance:
+
+- **Pattern Recognition**: Learns command usage patterns
+- **Preference Extraction**: Adapts to your communication style
+- **Proactive Suggestions**: Offers helpful suggestions based on context
+- **Feedback Integration**: Improves responses based on your feedback
+
+## 📚 Documentation
+
+- [API Documentation](docs/API.md) - Detailed API reference
+- [Security Guide](docs/SECURITY.md) - Security features and configuration
+- [Development Setup](docs/DEVELOPMENT.md) - Setup for contributors
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Examples](docs/EXAMPLES.md) - Usage examples and scenarios
+
+## 🔍 Project Structure
 
 ```
 jarvis-ai-assistant/
-├── main.py                 # Application entry point
-├── src/
-│   └── jarvis/
-│       ├── __init__.py
-│       ├── core.py         # Main orchestration logic
-│       ├── cli.py          # Command line interface
-│       ├── config.py       # Configuration management
-│       ├── voice/          # Voice processing module
-│       │   ├── __init__.py
-│       │   └── processor.py
-│       ├── ai_integration/ # AI service integration
-│       │   ├── __init__.py
-│       │   └── client.py
-│       ├── memory/         # Memory and context management
-│       │   ├── __init__.py
-│       │   └── manager.py
-│       ├── system_tools/   # System command execution
-│       │   ├── __init__.py
-│       │   └── manager.py
-│       └── utils/          # Utility functions
-│           ├── __init__.py
-│           └── logger.py
+├── jarvis.py                 # Main application orchestrator
+├── jarvis_cli.py            # Professional CLI management interface
+├── security.py              # Security validation and audit system
+├── requirements.txt         # Python dependencies
 ├── config/
-│   └── jarvis.json         # Default configuration
-├── logs/                   # Application logs
-├── tests/                  # Unit tests
-├── requirements.txt        # Python dependencies
-├── .env.template          # Environment variables template
-└── README.md              # This file
+│   ├── jarvis.json         # Main configuration
+│   └── security.json       # Security configuration
+├── src/jarvis/
+│   ├── ai_integration/      # AI provider integrations
+│   ├── interfaces/          # User interfaces (CLI, etc.)
+│   ├── learning/           # Learning and adaptation system
+│   ├── memory/             # Memory and conversation management
+│   ├── system_tools/       # System integration tools
+│   ├── voice/              # Voice processing
+│   └── utils/              # Utilities and helpers
+├── logs/
+│   ├── jarvis.log          # Application logs
+│   └── audit/              # Security audit logs
+├── docs/                   # Documentation
+└── tests/                  # Test suite
 ```
 
-## Configuration
+## 🧪 Testing
 
-### AI Providers
-
-**OpenAI**:
-```json
-{
-  "ai": {
-    "provider": "openai",
-    "model": "gpt-3.5-turbo",
-    "api_key": "your-openai-key"
-  }
-}
+Run the test suite:
+```bash
+python3 -m pytest tests/
 ```
 
-**Anthropic**:
-```json
-{
-  "ai": {
-    "provider": "anthropic",
-    "model": "claude-3-sonnet-20240229",
-    "api_key": "your-anthropic-key"
-  }
-}
+Test specific components:
+```bash
+# Test security module
+python3 security.py "echo 'test'"
+
+# Test CLI management
+python3 jarvis_cli.py exec "Hello Jarvis"
+
+# Test system status
+python3 jarvis_cli.py status --health
 ```
 
-**Mock (Development)**:
-```json
-{
-  "ai": {
-    "provider": "mock"
-  }
-}
-```
+## 🤝 Contributing
 
-### Security Settings
+We welcome contributions! Please see [DEVELOPMENT.md](docs/DEVELOPMENT.md) for setup instructions.
 
-Jarvis includes built-in security controls:
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes and add tests
+4. Run the test suite: `python3 -m pytest`
+5. Submit a pull request
 
-```json
-{
-  "system_tools": {
-    "enabled": true,
-    "allowed_commands": ["ls", "pwd", "date", "whoami"],
-    "blocked_commands": ["rm", "sudo", "chmod"],
-    "max_execution_time": 30
-  },
-  "security": {
-    "require_confirmation": true,
-    "safe_mode": true,
-    "allowed_file_extensions": [".txt", ".json", ".csv"],
-    "blocked_directories": ["/etc", "/usr", "/bin"]
-  }
-}
-```
-
-## Usage Examples
-
-### CLI Commands
+### Development Setup
 
 ```bash
-# Start interactive session
-python main.py
+# Clone your fork
+git clone https://github.com/your-username/jarvis-ai-assistant.git
+cd jarvis-ai-assistant
 
-# With specific configuration
-python main.py --config /path/to/config.json
+# Create development environment
+python3 -m venv venv
+source venv/bin/activate
 
-# Debug mode
-python main.py --debug
-
-# Show help
-python main.py --help
-```
-
-### Interactive Examples
-
-```
-You: Hello Jarvis, how are you?
-Jarvis: Hello! I'm Jarvis, your AI assistant. I'm doing well and ready to help you today!
-
-You: What time is it?
-Jarvis: The current time is 2024-01-15 14:30:22
-
-You: List files in current directory
-Jarvis: Here are the files in the current directory:
-[Lists files using system tools]
-
-You: help
-Available Commands:
-  help     - Show this help message
-  exit     - Exit the application
-  status   - Show system status
-  memory   - Show conversation summary
-  config   - Show configuration
-```
-
-## Development
-
-### Setting up Development Environment
-
-1. Install development dependencies:
-```bash
+# Install development dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt  # If available
+
+# Run in development mode
+python3 jarvis.py --debug
 ```
 
-2. Run tests:
-```bash
-pytest
-```
-
-3. Code formatting:
-```bash
-black src/
-```
-
-4. Type checking:
-```bash
-mypy src/
-```
-
-### Extending Jarvis
-
-**Adding New AI Providers**:
-1. Extend `AIClient` class in `src/jarvis/ai_integration/client.py`
-2. Add provider-specific response handling
-3. Update configuration schema
-
-**Adding New System Tools**:
-1. Extend `SystemToolsManager` in `src/jarvis/system_tools/manager.py`
-2. Add security validation for new tools
-3. Update allowed commands in configuration
-
-**Voice Processing**:
-1. Implement real audio capture in `src/jarvis/voice/processor.py`
-2. Integrate speech recognition libraries
-3. Add TTS engine integration
-
-## Security Considerations
-
-- **Command Filtering**: Only whitelisted commands are executed
-- **Timeout Protection**: Commands have execution time limits
-- **Path Restrictions**: Blocked access to sensitive directories
-- **Input Validation**: All user inputs are validated
-- **API Key Protection**: Sensitive configuration is sanitized in logs
-
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
 
-**Import Errors**:
+**Installation Issues**:
 ```bash
-# Ensure you're in the project directory and virtual environment is activated
-cd jarvis-ai-assistant
-source venv/bin/activate
+# On macOS, you might need:
+brew install portaudio  # For voice features
+
+# On Ubuntu/Debian:
+sudo apt-get install portaudio19-dev python3-pyaudio
 ```
 
-**Missing Dependencies**:
+**Voice Recognition Not Working**:
 ```bash
-pip install -r requirements.txt
+# Install optional voice dependencies
+python3 jarvis_cli.py system install --optional
 ```
 
-**Permission Issues**:
+**AI Provider Connection Issues**:
 ```bash
-# Check file permissions
-ls -la main.py
-chmod +x main.py
+# Check configuration
+python3 jarvis_cli.py config validate
+
+# Test AI provider status
+python3 jarvis_cli.py status --ai
 ```
 
-**Database Issues**:
-```bash
-# Remove corrupted database
-rm jarvis_memory.db
-```
+See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for more detailed solutions.
 
-### Logs
+## 📄 License
 
-Check logs for detailed error information:
-```bash
-tail -f logs/jarvis.log
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contributing
+## 🔗 Links
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Run the test suite
-6. Submit a pull request
+- [Documentation](docs/)
+- [Issues](https://github.com/your-org/jarvis-ai-assistant/issues)
+- [Discussions](https://github.com/your-org/jarvis-ai-assistant/discussions)
+- [Wiki](https://github.com/your-org/jarvis-ai-assistant/wiki)
 
-## License
+## 📞 Support
 
-This project is open source. Please check the LICENSE file for details.
+- **Documentation**: Check the [docs](docs/) directory
+- **Issues**: Report bugs via [GitHub Issues](https://github.com/your-org/jarvis-ai-assistant/issues)
+- **Discussions**: Join [GitHub Discussions](https://github.com/your-org/jarvis-ai-assistant/discussions)
+- **Security**: Report security issues privately via email
 
-## Roadmap
+## 🏆 Acknowledgments
 
-- [ ] Advanced voice processing with noise cancellation
-- [ ] Plugin system for third-party integrations
-- [ ] Web interface
-- [ ] Mobile app companion
-- [ ] Advanced memory with semantic search
-- [ ] Multi-language support
-- [ ] Docker containerization
-- [ ] Cloud deployment options
-
-## Support
-
-For questions, issues, or contributions:
-1. Check the troubleshooting section
-2. Review existing issues
-3. Create a new issue with detailed information
-4. Join community discussions
+- OpenAI for GPT models
+- Anthropic for Claude models
+- Ollama for local LLM support
+- All contributors and the open source community
 
 ---
 
-**Jarvis AI Assistant** - Your intelligent companion for productivity and system management.
+**Built with ❤️ for developers who want an intelligent, secure, and extensible AI assistant.**

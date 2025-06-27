@@ -93,6 +93,17 @@ class Config:
                 ],
                 "max_execution_time": 30
             },
+            "learning": {
+                "enabled": True,
+                "learning_interval_hours": 6,
+                "pattern_recognition": True,
+                "preference_extraction": True,
+                "frequency_analysis": True,
+                "suggestion_generation": True,
+                "feedback_incorporation": True,
+                "min_confidence_threshold": 0.6,
+                "max_suggestions": 5
+            },
             "logging": {
                 "level": "INFO",
                 "file": "logs/jarvis.log",
@@ -249,6 +260,11 @@ class Config:
     def security(self) -> Dict[str, Any]:
         """Get security configuration."""
         return self.config["security"]
+    
+    @property
+    def learning(self) -> Dict[str, Any]:
+        """Get learning configuration."""
+        return self.config["learning"]
     
     def validate(self) -> bool:
         """Validate configuration."""

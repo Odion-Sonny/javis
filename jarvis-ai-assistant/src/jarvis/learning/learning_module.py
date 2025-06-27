@@ -15,6 +15,7 @@ import logging
 import re
 import json
 import math
+import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Set, Union
@@ -1022,8 +1023,27 @@ class LearningModule:
             # Get interaction patterns
             patterns = self.memory_system.analyze_interaction_patterns(days_back=30)
             
-            # Get task history
-            tasks = self.memory_system.get_task_history(limit=50)
+            # Get task history (if available)
+            tasks = []
+            try:
+                if hasattr(self.memory_system, 'get_task_history'):
+                    tasks = self.memory_system.get_task_history(limit=50)
+                else:
+                    # Fallback: query tasks table directly
+                    with sqlite3.connect(str(self.memory_system.db_path)) as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("""
+                            SELECT task_id, user_request, task_type, status, created_at, 
+                                   started_at, completed_at, success, result_data
+                            FROM tasks 
+                            ORDER BY created_at DESC 
+                            LIMIT 50
+                        """)
+                        rows = cursor.fetchall()
+                        tasks = [dict(zip([col[0] for col in cursor.description], row)) for row in rows]
+            except Exception as e:
+                self.logger.warning(f"Failed to get task history: {e}")
+                tasks = []
             
             return {
                 'interactions': interactions,

@@ -7,7 +7,7 @@ import logging
 import asyncio
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from .voice.processor import VoiceProcessor
 from .ai_integration import AIBrain, IntentType
