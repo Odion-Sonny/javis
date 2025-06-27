@@ -38,9 +38,12 @@
     "pause_threshold": 0.8
   },
   "memory": {
-    "max_context_length": 4000,
+    "db_path": "data/jarvis_memory.db",
+    "max_context_entries": 50,
+    "max_context_tokens": 4000,
     "context_window_hours": 24,
-    "db_path": "jarvis_memory.db"
+    "pattern_learning_threshold": 3,
+    "preference_confidence_threshold": 0.7
   },
   "system_tools": {
     "enabled": true,
