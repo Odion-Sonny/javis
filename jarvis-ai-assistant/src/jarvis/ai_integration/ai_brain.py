@@ -467,15 +467,17 @@ class AIBrain:
     - Response generation with tone control
     """
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], memory_system=None):
         """
         Initialize the AI Brain.
         
         Args:
             config: Configuration dictionary containing AI settings
+            memory_system: Optional advanced memory system for enhanced context
         """
         self.config = config
         self.logger = logging.getLogger(__name__)
+        self.memory_system = memory_system  # Enhanced memory system integration
         
         # Initialize providers
         self.providers: Dict[AIProvider, BaseAIProvider] = {}
@@ -497,6 +499,11 @@ class AIBrain:
         self.system_prompt = config.get('system_prompt', self._get_default_system_prompt())
         
         self.logger.info(f"AI Brain initialized with primary provider: {self.primary_provider.value}")
+    
+    def set_memory_system(self, memory_system):
+        """Set the memory system for enhanced context and learning."""
+        self.memory_system = memory_system
+        self.logger.info("Advanced memory system connected to AI Brain")
     
     def _initialize_providers(self):
         """Initialize all available AI providers."""
@@ -592,7 +599,7 @@ Remember to:
             )
     
     def _prepare_messages(self, context_override: Optional[Dict[str, Any]] = None) -> List[Dict[str, str]]:
-        """Prepare messages for AI processing."""
+        """Prepare messages for AI processing with enhanced memory context."""
         messages = []
         
         # Add system prompt
@@ -601,6 +608,67 @@ Remember to:
             'content': self.system_prompt
         })
         
+        # Add enhanced context from memory system if available
+        if self.memory_system:
+            try:
+                # Get conversation context from advanced memory system
+                memory_context = self.memory_system.get_conversation_context(
+                    max_entries=self.context.context_window,
+                    include_metadata=True
+                )
+                
+                # Get user preferences for enhanced context
+                preferences = []
+                for category in ['voice', 'interface', 'behavior']:
+                    prefs = self.memory_system.get_preferences_by_category(category)
+                    preferences.extend([f"{p.key}: {p.value}" for p in prefs[:3]])
+                
+                if preferences:
+                    pref_context = f"User preferences: {'; '.join(preferences)}"
+                    messages.append({
+                        'role': 'system',
+                        'content': pref_context
+                    })
+                
+                # Get contextual suggestions
+                suggestions = self.memory_system.get_contextual_suggestions("", 2)
+                if suggestions:
+                    suggestion_text = "Recent patterns: " + "; ".join([
+                        s.get('type', 'unknown') for s in suggestions
+                    ])
+                    messages.append({
+                        'role': 'system',
+                        'content': suggestion_text
+                    })
+                
+                # Use memory context instead of local context
+                for ctx in memory_context[-self.context.context_window:]:
+                    if ctx['role'] in ['user', 'assistant']:
+                        messages.append({
+                            'role': ctx['role'],
+                            'content': ctx['content']
+                        })
+                        
+            except Exception as e:
+                self.logger.warning(f"Failed to get enhanced memory context: {e}")
+                # Fall back to local context
+                recent_messages = self.context.get_recent_messages()
+                for msg in recent_messages:
+                    if msg['role'] in ['user', 'assistant']:
+                        messages.append({
+                            'role': msg['role'],
+                            'content': msg['content']
+                        })
+        else:
+            # Add conversation history from local context
+            recent_messages = self.context.get_recent_messages()
+            for msg in recent_messages:
+                if msg['role'] in ['user', 'assistant']:
+                    messages.append({
+                        'role': msg['role'],
+                        'content': msg['content']
+                    })
+        
         # Add context override if provided
         if context_override:
             context_content = f"Additional context: {json.dumps(context_override, indent=2)}"
@@ -608,15 +676,6 @@ Remember to:
                 'role': 'system',
                 'content': context_content
             })
-        
-        # Add conversation history
-        recent_messages = self.context.get_recent_messages()
-        for msg in recent_messages:
-            if msg['role'] in ['user', 'assistant']:
-                messages.append({
-                    'role': msg['role'],
-                    'content': msg['content']
-                })
         
         return messages
     

@@ -200,10 +200,7 @@ class MemorySystem:
                         confidence_score REAL DEFAULT 0.0,
                         tokens_used INTEGER DEFAULT 0,
                         response_time REAL DEFAULT 0.0,
-                        metadata TEXT,
-                        INDEX(session_id),
-                        INDEX(timestamp),
-                        INDEX(interaction_type)
+                        metadata TEXT
                     )
                 """)
                 
@@ -223,11 +220,7 @@ class MemorySystem:
                         error_message TEXT,
                         result_data TEXT,
                         user_feedback TEXT,
-                        feedback_score INTEGER,
-                        INDEX(task_id),
-                        INDEX(task_type),
-                        INDEX(status),
-                        INDEX(created_at)
+                        feedback_score INTEGER
                     )
                 """)
                 
@@ -244,10 +237,7 @@ class MemorySystem:
                         created_at TEXT NOT NULL,
                         context TEXT,
                         metadata TEXT,
-                        UNIQUE(key, category),
-                        INDEX(key),
-                        INDEX(category),
-                        INDEX(confidence)
+                        UNIQUE(key, category)
                     )
                 """)
                 
@@ -262,10 +252,7 @@ class MemorySystem:
                         avg_response_time REAL DEFAULT 0.0,
                         last_occurrence TEXT NOT NULL,
                         context_clues TEXT,
-                        metadata TEXT,
-                        INDEX(pattern_id),
-                        INDEX(pattern_type),
-                        INDEX(frequency)
+                        metadata TEXT
                     )
                 """)
                 
@@ -278,9 +265,7 @@ class MemorySystem:
                         topics TEXT,
                         created_at TEXT NOT NULL,
                         entry_count INTEGER DEFAULT 0,
-                        token_count INTEGER DEFAULT 0,
-                        INDEX(session_id),
-                        INDEX(created_at)
+                        token_count INTEGER DEFAULT 0
                     )
                 """)
                 

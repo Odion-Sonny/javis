@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional
 from .voice.processor import VoiceProcessor
 from .ai_integration import AIBrain, IntentType
 from .memory.memory_system import MemorySystem, ConversationEntry, InteractionType, TaskRecord, TaskStatus
+from .memory.migration import create_memory_system_with_migration
 from .system_tools.manager import SystemToolsManager
 from .config import Config
 
@@ -24,10 +25,10 @@ class JarvisAssistant:
         self.config = config
         self.logger = logging.getLogger(__name__)
         
-        # Initialize components
+        # Initialize components with migration support
         self.voice_processor = VoiceProcessor(config.voice)
-        self.ai_brain = AIBrain(config.ai)
-        self.memory_system = MemorySystem(config.memory)
+        self.memory_system = create_memory_system_with_migration(config.memory)
+        self.ai_brain = AIBrain(config.ai, self.memory_system)
         self.system_tools = SystemToolsManager(config.system_tools)
         
         self.is_running = False
