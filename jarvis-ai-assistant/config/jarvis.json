@@ -45,6 +45,41 @@
     "pattern_learning_threshold": 3,
     "preference_confidence_threshold": 0.7
   },
+  "learning": {
+    "enabled": true,
+    "learning_interval_hours": 24,
+    "pattern_recognition": {
+      "enabled": true,
+      "min_pattern_frequency": 3,
+      "pattern_window_days": 7
+    },
+    "preference_extraction": {
+      "enabled": true,
+      "confidence_threshold": 0.6
+    },
+    "command_frequency": {
+      "enabled": true,
+      "analysis_window_days": 30,
+      "min_frequency": 2
+    },
+    "suggestion_generation": {
+      "enabled": true,
+      "suggestion_threshold": 0.7,
+      "max_suggestions": 5,
+      "suggestion_types": [
+        "command_optimization", 
+        "workflow_improvement", 
+        "preference_suggestion",
+        "automation_opportunity", 
+        "learning_tip"
+      ]
+    },
+    "feedback_incorporation": {
+      "enabled": true,
+      "feedback_weight": 0.3,
+      "improvement_threshold": 0.1
+    }
+  },
   "system_tools": {
     "enabled": true,
     "allowed_commands": [

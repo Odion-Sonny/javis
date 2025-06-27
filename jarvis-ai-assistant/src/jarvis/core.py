@@ -13,6 +13,7 @@ from .voice.processor import VoiceProcessor
 from .ai_integration import AIBrain, IntentType
 from .memory.memory_system import MemorySystem, ConversationEntry, InteractionType, TaskRecord, TaskStatus
 from .memory.migration import create_memory_system_with_migration
+from .learning import create_learning_module, LearningModule
 from .system_tools.manager import SystemToolsManager
 from .config import Config
 
@@ -30,6 +31,12 @@ class JarvisAssistant:
         self.memory_system = create_memory_system_with_migration(config.memory)
         self.ai_brain = AIBrain(config.ai, self.memory_system)
         self.system_tools = SystemToolsManager(config.system_tools)
+        
+        # Initialize learning module if enabled
+        if config.learning.get('enabled', True):
+            self.learning_module = create_learning_module(config.learning, self.memory_system)
+        else:
+            self.learning_module = None
         
         self.is_running = False
         self.logger.info("Jarvis AI Assistant initialized")
@@ -99,6 +106,15 @@ class JarvisAssistant:
             # Learn from the interaction patterns
             self._learn_from_interaction(command, ai_response, task_id)
             
+            # Trigger learning cycle if enabled and due
+            if self.learning_module:
+                try:
+                    learning_status = self.learning_module.get_learning_status()
+                    if learning_status.get('should_run_learning', False):
+                        asyncio.create_task(self._run_background_learning())
+                except Exception as e:
+                    self.logger.warning(f"Failed to check learning status: {e}")
+            
             self.logger.info(f"Processed command with intent: {ai_response.intent.value}, "
                            f"confidence: {ai_response.confidence:.2f}, "
                            f"provider: {ai_response.provider.value}")
@@ -167,6 +183,51 @@ class JarvisAssistant:
             self.logger.error(f"Error searching memory: {e}")
             return {}
     
+    async def _run_background_learning(self):
+        """Run learning cycle in background."""
+        try:
+            if self.learning_module:
+                result = self.learning_module.run_learning_cycle()
+                self.logger.info(f"Background learning completed: {result.get('status')}")
+        except Exception as e:
+            self.logger.error(f"Background learning failed: {e}")
+    
+    def get_proactive_suggestions(self, context: str = "") -> List[Dict[str, Any]]:
+        """Get proactive suggestions based on learned patterns."""
+        try:
+            if self.learning_module:
+                return self.learning_module.get_proactive_suggestions(context)
+            return []
+        except Exception as e:
+            self.logger.error(f"Error getting proactive suggestions: {e}")
+            return []
+    
+    def add_user_feedback(self, feedback_data: Dict[str, Any]) -> bool:
+        """Add user feedback for learning improvement."""
+        try:
+            if self.learning_module:
+                return self.learning_module.add_feedback(feedback_data)
+            return False
+        except Exception as e:
+            self.logger.error(f"Error adding user feedback: {e}")
+            return False
+    
+    def get_learning_insights(self) -> Dict[str, Any]:
+        """Get insights from the learning module."""
+        try:
+            if self.learning_module:
+                status = self.learning_module.get_learning_status()
+                # Run a quick learning cycle to get fresh insights
+                result = self.learning_module.run_learning_cycle(force=True)
+                return {
+                    'status': status,
+                    'latest_results': result
+                }
+            return {'message': 'Learning module not enabled'}
+        except Exception as e:
+            self.logger.error(f"Error getting learning insights: {e}")
+            return {'error': str(e)}
+    
     def start_voice_mode(self):
         """Start voice interaction mode."""
         self.logger.info("Starting voice mode...")
@@ -191,6 +252,12 @@ class JarvisAssistant:
         finally:
             self.is_running = False
             self.memory_system.close()
+            if self.learning_module:
+                # Run final learning cycle before shutdown
+                try:
+                    self.learning_module.run_learning_cycle(force=True)
+                except Exception as e:
+                    self.logger.warning(f"Final learning cycle failed: {e}")
     
     def start_daemon_mode(self):
         """Start daemon mode for background operation."""
