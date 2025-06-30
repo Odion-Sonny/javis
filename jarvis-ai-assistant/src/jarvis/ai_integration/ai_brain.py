@@ -254,8 +254,9 @@ class OllamaProvider(BaseAIProvider):
         
         try:
             models = self.client.list()
+            # Handle both exact match and base model name match (e.g., llama2 matches llama2:latest)
             current_model = next(
-                (m for m in models.get('models', []) if m['name'] == self.model),
+                (m for m in models.get('models', []) if m.get('name', '').startswith(self.model.split(':')[0])),
                 None
             )
             return current_model or {}

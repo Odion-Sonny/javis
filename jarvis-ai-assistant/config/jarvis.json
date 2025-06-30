@@ -5,7 +5,7 @@
     "context_window": 10,
     "system_prompt": "You are Jarvis, an intelligent AI assistant. You are helpful, harmless, and honest. You can help with various tasks including answering questions, providing information, and assisting with system operations when appropriate.",
     "ollama": {
-      "model": "llama2",
+      "model": "llama2:latest",
       "base_url": "http://localhost:11434",
       "temperature": 0.7,
       "max_tokens": 1000
