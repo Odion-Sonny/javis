@@ -187,6 +187,19 @@ class JarvisApplication:
             # Initialize AI brain
             self.logger.debug("Initializing AI brain...")
             self.ai_brain = AIBrain(self.config.ai, self.memory_system)
+            
+            # Perform async initialization (model preloading) in background
+            def preload_in_background():
+                try:
+                    asyncio.run(self.ai_brain.initialize_async())
+                except Exception as e:
+                    self.logger.warning(f"AI brain async initialization failed: {e}")
+            
+            # Start preloading in a separate thread
+            import threading
+            preload_thread = threading.Thread(target=preload_in_background, daemon=True)
+            preload_thread.start()
+            
             self.health_status.components['ai_brain'] = True
             
             # Initialize voice processor

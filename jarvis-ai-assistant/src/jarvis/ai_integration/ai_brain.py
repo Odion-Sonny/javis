@@ -166,24 +166,51 @@ class OllamaProvider(BaseAIProvider):
         self.temperature = config.get('temperature', 0.7)
         self.max_tokens = config.get('max_tokens', 1000)
         
-        # Initialize Ollama client
-        self.client = None
-        if OLLAMA_AVAILABLE:
-            try:
-                self.client = ollama.Client(host=self.base_url)
-            except Exception as e:
-                self.logger.error(f"Failed to initialize Ollama client: {e}")
-        else:
-            self.logger.warning("Ollama package not available. Install with: pip install ollama")
+        # Initialize HTTP client for direct API calls
+        self.client_available = AIOHTTP_AVAILABLE
+        if not AIOHTTP_AVAILABLE:
+            self.logger.warning("aiohttp package not available. Install with: pip install aiohttp")
+    
+    async def preload_model(self):
+        """Preload the model to avoid cold start delays."""
+        if not self.client_available:
+            return False
+        
+        try:
+            self.logger.info(f"Preloading Ollama model: {self.model}")
+            
+            async with aiohttp.ClientSession() as session:
+                payload = {
+                    "model": self.model,
+                    "prompt": "Hi",
+                    "stream": False,
+                    "options": {"num_predict": 1}  # Minimal generation
+                }
+                
+                async with session.post(
+                    f"{self.base_url}/api/generate",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=120.0)
+                ) as response:
+                    if response.status == 200:
+                        self.logger.info(f"Model {self.model} preloaded successfully")
+                        return True
+                    else:
+                        self.logger.warning(f"Preload failed with status {response.status}")
+                        return False
+                        
+        except Exception as e:
+            self.logger.warning(f"Failed to preload model {self.model}: {e}")
+            return False
     
     async def generate_response(
         self, 
         messages: List[Dict[str, str]], 
         **kwargs
     ) -> AIResponse:
-        """Generate response using Ollama."""
-        if not self.client:
-            raise RuntimeError("Ollama client not initialized")
+        """Generate response using Ollama via direct HTTP API."""
+        if not self.client_available:
+            raise RuntimeError("HTTP client not available")
         
         start_time = time.time()
         
@@ -196,19 +223,43 @@ class OllamaProvider(BaseAIProvider):
                     'content': msg['content']
                 })
             
-            # Generate response
-            response = await asyncio.to_thread(
-                self.client.chat,
-                model=self.model,
-                messages=ollama_messages,
-                options={
-                    'temperature': self.temperature,
-                    'num_predict': self.max_tokens
+            # Convert messages to a single prompt (using generate API instead of chat API)
+            prompt = ""
+            for msg in ollama_messages:
+                if msg['role'] == 'system':
+                    prompt += f"System: {msg['content']}\n"
+                elif msg['role'] == 'user':
+                    prompt += f"User: {msg['content']}\n"
+                elif msg['role'] == 'assistant':
+                    prompt += f"Assistant: {msg['content']}\n"
+            
+            # Prepare request payload for generate API
+            payload = {
+                "model": self.model,
+                "prompt": prompt.strip(),
+                "stream": False,
+                "options": {
+                    "temperature": self.temperature,
+                    "num_predict": self.max_tokens
                 }
-            )
+            }
+            
+            # Make HTTP request with timeout
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{self.base_url}/api/generate",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=180.0)
+                ) as response:
+                    
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise RuntimeError(f"Ollama API returned status {response.status}: {error_text}")
+                    
+                    response_data = await response.json()
             
             response_time = time.time() - start_time
-            content = response['message']['content']
+            content = response_data['response']
             
             # Analyze response for intent and tone
             intent = self._analyze_intent(content)
@@ -221,45 +272,56 @@ class OllamaProvider(BaseAIProvider):
                 tone=tone,
                 provider=AIProvider.OLLAMA,
                 model=self.model,
-                tokens_used=response.get('eval_count', 0),
+                tokens_used=response_data.get('eval_count', 0),
                 response_time=response_time,
                 metadata={
-                    'total_duration': response.get('total_duration', 0),
-                    'load_duration': response.get('load_duration', 0),
-                    'prompt_eval_count': response.get('prompt_eval_count', 0)
+                    'total_duration': response_data.get('total_duration', 0),
+                    'load_duration': response_data.get('load_duration', 0),
+                    'prompt_eval_count': response_data.get('prompt_eval_count', 0)
                 }
             )
             
+        except asyncio.TimeoutError:
+            self.logger.error(f"Ollama generation timed out after 180.0 seconds for model {self.model}")
+            raise
         except Exception as e:
-            self.logger.error(f"Ollama generation failed: {e}")
+            self.logger.error(f"Ollama generation failed: {type(e).__name__}: {e}")
+            if hasattr(e, '__dict__'):
+                self.logger.error(f"Error details: {e.__dict__}")
             raise
     
     def is_available(self) -> bool:
         """Check if Ollama is available."""
-        if not OLLAMA_AVAILABLE or not self.client:
+        if not self.client_available:
             return False
         
         try:
-            # Try to list models to check connectivity
-            models = self.client.list()
-            return len(models.get('models', [])) > 0
+            # Try to ping Ollama API to check connectivity
+            import requests
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            return response.status_code == 200
         except Exception as e:
             self.logger.warning(f"Ollama availability check failed: {e}")
             return False
     
     def get_model_info(self) -> Dict[str, Any]:
         """Get Ollama model information."""
-        if not self.client:
+        if not self.client_available:
             return {}
         
         try:
-            models = self.client.list()
-            # Handle both exact match and base model name match (e.g., llama2 matches llama2:latest)
-            current_model = next(
-                (m for m in models.get('models', []) if m.get('name', '').startswith(self.model.split(':')[0])),
-                None
-            )
-            return current_model or {}
+            # Use HTTP request to get model info
+            import requests
+            response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            if response.status_code == 200:
+                models_data = response.json()
+                # Handle both exact match and base model name match (e.g., llama2 matches llama2:latest)
+                current_model = next(
+                    (m for m in models_data.get('models', []) if m.get('name', '').startswith(self.model.split(':')[0])),
+                    None
+                )
+                return current_model or {}
+            return {}
         except Exception as e:
             self.logger.error(f"Failed to get model info: {e}")
             return {}
@@ -501,6 +563,17 @@ class AIBrain:
         
         self.logger.info(f"AI Brain initialized with primary provider: {self.primary_provider.value}")
     
+    async def initialize_async(self):
+        """Perform async initialization tasks like model preloading."""
+        try:
+            # Preload the primary provider if it's Ollama
+            if self.primary_provider == AIProvider.OLLAMA and AIProvider.OLLAMA in self.providers:
+                ollama_provider = self.providers[AIProvider.OLLAMA]
+                if hasattr(ollama_provider, 'preload_model'):
+                    await ollama_provider.preload_model()
+        except Exception as e:
+            self.logger.warning(f"Async initialization failed: {e}")
+    
     def set_memory_system(self, memory_system):
         """Set the memory system for enhanced context and learning."""
         self.memory_system = memory_system
@@ -620,16 +693,22 @@ Remember to:
                 
                 # Get user preferences for enhanced context
                 preferences = []
-                for category in ['voice', 'interface', 'behavior']:
-                    prefs = self.memory_system.get_preferences_by_category(category)
-                    preferences.extend([f"{p.key}: {p.value}" for p in prefs[:3]])
-                
-                if preferences:
-                    pref_context = f"User preferences: {'; '.join(preferences)}"
-                    messages.append({
-                        'role': 'system',
-                        'content': pref_context
-                    })
+                try:
+                    # Try to get some common preferences
+                    common_prefs = ['response_style', 'verbosity', 'tone', 'preferred_format']
+                    for pref_key in common_prefs:
+                        pref_value = self.memory_system.get_user_preference(pref_key)
+                        if pref_value:
+                            preferences.append(f"{pref_key}: {pref_value}")
+                    
+                    if preferences:
+                        pref_context = f"User preferences: {'; '.join(preferences)}"
+                        messages.append({
+                            'role': 'system',
+                            'content': pref_context
+                        })
+                except Exception as e:
+                    self.logger.debug(f"Could not retrieve user preferences: {e}")
                 
                 # Get contextual suggestions
                 suggestions = self.memory_system.get_contextual_suggestions("", 2)

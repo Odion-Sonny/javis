@@ -326,8 +326,8 @@ class JarvisCLI:
         exec_parser.add_argument(
             '--timeout',
             type=int,
-            default=30,
-            help='Command timeout in seconds (default: 30)'
+            default=180,
+            help='Command timeout in seconds (default: 180)'
         )
     
     def _add_system_parser(self, subparsers):
@@ -743,6 +743,9 @@ Examples:
             
             # Create Jarvis application
             with JarvisApplication(config_path=args.config, debug=args.debug) as jarvis:
+                # Set the application to running state for exec mode
+                jarvis.is_running = True
+                
                 # Process command with timeout
                 try:
                     response = await asyncio.wait_for(
