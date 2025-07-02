@@ -334,7 +334,38 @@ class VoiceInterface:
     def _fallback_wake_word_detection(self):
         """Fallback wake word detection using simple keyword matching."""
         self.logger.info("Using fallback wake word detection")
-        # Will be implemented in the listening loop
+        
+        while self.is_active:
+            try:
+                # Get text input as fallback (simulating voice input)
+                print(f"💬 Say '{self.wake_word}' to activate (or type it): ", end="", flush=True)
+                
+                # In a real implementation, this would process actual audio
+                # For now, we'll use a simple input simulation
+                import select
+                import sys
+                
+                # Check if input is available (non-blocking)
+                if sys.stdin in select.select([sys.stdin], [], [], 1.0)[0]:
+                    user_input = input().strip().lower()
+                    
+                    if self.wake_word.lower() in user_input:
+                        self.logger.info("Wake word detected via fallback method")
+                        # Trigger wake word callback
+                        if hasattr(self, '_wake_word_callback') and self._wake_word_callback:
+                            self._wake_word_callback()
+                        return True
+                
+                time.sleep(0.5)  # Brief pause to prevent excessive CPU usage
+                
+            except (EOFError, KeyboardInterrupt):
+                self.logger.info("Fallback wake word detection interrupted")
+                break
+            except Exception as e:
+                self.logger.error(f"Error in fallback wake word detection: {e}")
+                time.sleep(1)
+        
+        return False
     
     def _select_voice(self, voices) -> Optional[Any]:
         """Select the best voice based on configuration."""
