@@ -478,21 +478,12 @@ class MockProvider(BaseAIProvider):
         
         last_message = messages[-1]['content'].lower() if messages else ""
         
-        # Simple keyword-based responses
-        if 'hello' in last_message or 'hi' in last_message:
-            content = "Hello! I'm Jarvis, your AI assistant. How can I help you today?"
-            intent = IntentType.GREETING
-        elif 'time' in last_message:
-            content = f"The current time is {datetime.now().strftime('%H:%M:%S')}"
-            intent = IntentType.INFORMATION
-        elif 'weather' in last_message:
-            content = "I don't have access to current weather data, but I can help you set up weather integration!"
-            intent = IntentType.INFORMATION
-        elif any(word in last_message for word in ['run', 'execute', 'open']):
-            content = "I can help you with system commands. What would you like me to do?"
-            intent = IntentType.SYSTEM_CONTROL
-        else:
-            content = f"You said: '{messages[-1]['content']}'. I'm currently in mock mode. In production, I would process this with a real AI model."
+        # Enhanced keyword-based responses with better pattern matching
+        content, intent = self._generate_mock_response(last_message)
+        
+        # Fallback response
+        if not content:
+            content = f"I understand you're asking about '{messages[-1]['content']}'. As your AI assistant, I'm here to help with various tasks including system commands, information queries, and general conversation. What specific assistance do you need?"
             intent = IntentType.CONVERSATION
         
         return AIResponse(
@@ -517,6 +508,104 @@ class MockProvider(BaseAIProvider):
             'provider': 'mock',
             'type': 'development'
         }
+    
+    def _generate_mock_response(self, message: str) -> tuple[str, IntentType]:
+        """Generate sophisticated mock responses based on message analysis."""
+        import re
+        
+        # Greeting patterns
+        greeting_patterns = [
+            r'\b(hello|hi|hey|greetings|good morning|good afternoon|good evening)\b',
+            r'\bjarvis\b.*\b(hello|hi|hey)\b'
+        ]
+        
+        # Question patterns
+        question_patterns = [
+            r'\bwhat\s+(is|are|was|were|time|weather|date)',
+            r'\bhow\s+(do|can|to|are)',
+            r'\bwhen\s+(is|are|will|did)',
+            r'\bwhere\s+(is|are|can)',
+            r'\bwhy\s+(is|are|do|did)'
+        ]
+        
+        # Command patterns
+        command_patterns = [
+            r'\b(run|execute|start|launch|open|close|stop)\b',
+            r'\b(create|make|build|generate|write)\b',
+            r'\b(find|search|locate|look)\b',
+            r'\b(help|assist|support)\b.*\bwith\b'
+        ]
+        
+        # Time-related patterns
+        time_patterns = [
+            r'\b(time|clock|hour|minute|second)\b',
+            r'\bwhat.*time\b'
+        ]
+        
+        # System patterns
+        system_patterns = [
+            r'\b(system|computer|cpu|memory|disk|network)\b',
+            r'\b(file|folder|directory|path)\b',
+            r'\b(install|uninstall|update|upgrade)\b'
+        ]
+        
+        # Check patterns and generate appropriate responses
+        for pattern in greeting_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                greetings = [
+                    "Hello! I'm Jarvis, your AI assistant. How can I help you today?",
+                    "Hi there! I'm ready to assist you. What would you like to do?",
+                    "Greetings! I'm here to help with whatever you need.",
+                    "Hello! Nice to meet you. What can I do for you?"
+                ]
+                return greetings[hash(message) % len(greetings)], IntentType.GREETING
+        
+        for pattern in time_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                from datetime import datetime
+                now = datetime.now()
+                return f"The current time is {now.strftime('%I:%M:%S %p')} on {now.strftime('%A, %B %d, %Y')}", IntentType.INFORMATION
+        
+        for pattern in system_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                responses = [
+                    "I can help you with system operations. What specific system task would you like me to perform?",
+                    "System commands are one of my specialties. Please specify what you'd like me to do.",
+                    "I'm ready to assist with system-level tasks. What do you need help with?"
+                ]
+                return responses[hash(message) % len(responses)], IntentType.SYSTEM_CONTROL
+        
+        for pattern in command_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                responses = [
+                    "I can execute various commands and operations. What would you like me to run?",
+                    "Command execution is available. Please specify the exact command or operation.",
+                    "I'm ready to help with running commands. What should I execute for you?"
+                ]
+                return responses[hash(message) % len(responses)], IntentType.SYSTEM_CONTROL
+        
+        for pattern in question_patterns:
+            if re.search(pattern, message, re.IGNORECASE):
+                responses = [
+                    "That's an interesting question! While I'm in mock mode, I'd normally research that for you using my knowledge base and available tools.",
+                    "I'd be happy to help answer that. In production mode, I would analyze your question and provide detailed information.",
+                    "Great question! I would typically search through available resources and provide you with accurate information."
+                ]
+                return responses[hash(message) % len(responses)], IntentType.INFORMATION
+        
+        # Weather-specific response
+        if re.search(r'\b(weather|temperature|forecast|rain|snow|sunny|cloudy)\b', message, re.IGNORECASE):
+            return "I don't currently have access to weather data, but I can help you set up weather integration with APIs like OpenWeatherMap or AccuWeather!", IntentType.INFORMATION
+        
+        # Learning and memory patterns
+        if re.search(r'\b(remember|learn|memorize|recall|forget)\b', message, re.IGNORECASE):
+            return "I have learning capabilities that allow me to remember our conversations and adapt to your preferences. What would you like me to remember?", IntentType.LEARNING
+        
+        # Help patterns
+        if re.search(r'\b(help|assist|support|guide|tutorial)\b', message, re.IGNORECASE):
+            return "I'm here to help! I can assist with system commands, answer questions, manage files, set reminders, and much more. What specific help do you need?", IntentType.INFORMATION
+        
+        return "", IntentType.CONVERSATION
 
 
 class AIBrain:

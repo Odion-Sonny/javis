@@ -252,13 +252,77 @@ class PatternRecognitionEngine(BaseLearningEngine):
         return patterns
     
     def _extract_keywords(self, text: str) -> List[str]:
-        """Extract meaningful keywords from text."""
-        # Simple keyword extraction - could be enhanced with NLP
-        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'please', 'help', 'me', 'i', 'you', 'it', 'this', 'that'}
+        """Extract meaningful keywords from text using enhanced NLP techniques."""
+        # Comprehensive stop words list
+        stop_words = {
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+            'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did',
+            'will', 'would', 'could', 'should', 'may', 'might', 'can', 'please', 'help', 'me', 'i',
+            'you', 'it', 'this', 'that', 'they', 'them', 'their', 'there', 'then', 'than', 'so',
+            'very', 'just', 'now', 'get', 'go', 'come', 'see', 'know', 'take', 'make', 'give',
+            'tell', 'want', 'need', 'think', 'like', 'look', 'use', 'find', 'work', 'way', 'time'
+        }
         
-        words = re.findall(r'\b\w+\b', text.lower())
-        keywords = [word for word in words if len(word) > 2 and word not in stop_words]
+        # Clean and tokenize text
+        text = re.sub(r'[^\w\s]', ' ', text.lower())
+        words = re.findall(r'\b\w+\b', text)
+        
+        # Filter words
+        filtered_words = [
+            word for word in words 
+            if len(word) > 2 and word not in stop_words and not word.isdigit()
+        ]
+        
+        # Calculate word frequencies
+        word_freq = {}
+        for word in filtered_words:
+            word_freq[word] = word_freq.get(word, 0) + 1
+        
+        # Score words based on frequency and length
+        scored_words = []
+        for word, freq in word_freq.items():
+            # Score based on frequency, length, and position in text
+            score = freq * (len(word) ** 0.5)
+            
+            # Boost score for technical terms (contain numbers/caps)
+            if any(c.isupper() for c in word) or any(c.isdigit() for c in word):
+                score *= 1.5
+            
+            # Boost score for compound words
+            if len(word) > 6:
+                score *= 1.2
+            
+            scored_words.append((word, score))
+        
+        # Sort by score and return top keywords
+        scored_words.sort(key=lambda x: x[1], reverse=True)
+        keywords = [word for word, score in scored_words[:15]]
+        
+        # Add bigrams for better context
+        bigrams = self._extract_bigrams(text, stop_words)
+        keywords.extend(bigrams[:5])
+        
         return list(set(keywords))[:10]  # Return up to 10 unique keywords
+    
+    def _extract_bigrams(self, text: str, stop_words: set) -> List[str]:
+        """Extract meaningful bigrams (two-word phrases) from text."""
+        words = re.findall(r'\b\w+\b', text.lower())
+        words = [w for w in words if len(w) > 2 and w not in stop_words]
+        
+        bigrams = []
+        for i in range(len(words) - 1):
+            bigram = f"{words[i]} {words[i+1]}"
+            if len(bigram) > 5:  # Only meaningful bigrams
+                bigrams.append(bigram)
+        
+        # Count bigram frequency
+        bigram_freq = {}
+        for bigram in bigrams:
+            bigram_freq[bigram] = bigram_freq.get(bigram, 0) + 1
+        
+        # Return most frequent bigrams
+        sorted_bigrams = sorted(bigram_freq.items(), key=lambda x: x[1], reverse=True)
+        return [bigram for bigram, freq in sorted_bigrams if freq > 1][:5]
     
     def _update_patterns(self, temporal: Dict, sequence: Dict, context: Dict):
         """Update the pattern database with new findings."""
